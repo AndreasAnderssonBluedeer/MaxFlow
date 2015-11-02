@@ -3,45 +3,49 @@ import java.util.LinkedList;
 
 /**
  * Created by Andreas on 2015-10-28.
+ * MaxFlow lets the user create a graph with connections between "U" and "V", and let
+ * the Ford Fulkerson algorithm calculate the maximum flow. Returns/Prints Maximum Flow and
+ * input Graph.
  */
 public class MaxFlow {
-
 
         private int[] parent;
         private LinkedList<Integer> queue;
         private int size;
         private boolean[] visited;
-
-        private int nodesLeft,nodesRight;
         private int[][] graph;
 
-
+    /**
+     * Constructor for MaxFlow. Intialize/Create Graph, Make connections between vertexes, and return
+     * Maxflow.
+     */
         public MaxFlow() {
 
+            int nodesLeft,nodesRight;
+            //Number of left and right nodes.
             nodesLeft = Integer.parseInt(JOptionPane.showInputDialog("Ange antal vänster noder."));
             nodesRight = Integer.parseInt(JOptionPane.showInputDialog("Ange antal höger noder."));
 
             size=nodesLeft + nodesRight + 2;
 
             graph = new int[size][size];
-
             this.queue = new LinkedList<Integer>();
             parent = new int[size ];
             visited = new boolean[size];
 
-            //Definiera kopplingen från source till vänsternoder
+            //Intialize Array
             for (int i = 1; i <= nodesLeft; i++) {
                 graph[0][i] = 1;
             }
 
-            //Definera kopplingen från högernoder till sink.
+            //Intialize Array
             for (int i = nodesLeft + 1; i < graph.length - 1; i++) {
                 graph[i][graph.length - 1] = 1;
             }
+
             boolean input = true;
 
-            // nodesLeft noder/värden = 1 till nodesleft value.
-            // nodesRight noder/värden= nodesleft+1 till nodesleft+nodesright.
+            //Create connections between left and right nodes/Vertexes.
             while (input) {
                 String left = (JOptionPane.showInputDialog("Skapa en connection från en av vänster noderna.\n"
                         + "En siffra från 1-" + nodesLeft + "\nTryck endast OK för att avsluta."));
@@ -62,19 +66,31 @@ public class MaxFlow {
             printGraph(graph);
             fordFulkerson(graph,0,graph.length-1);
         }
-        public boolean bfs(int source, int goal, int graph[][]) {
-            boolean pathFound = false;
+
+    /**
+     * This Method tries to find a path from Source to Sink vertex.
+     * Recieves a Graph, Source vertex and Sink vertex. Returns Boolean
+     * whether there is a path or not.
+     * @param source -source/Start Vertex.
+     * @param sink  -Sink/End Vertex.
+     * @param graph -Graph to find path in.
+     * @return boolean
+     */
+        public boolean bfs(int source, int sink, int graph[][]) {
+            boolean path = false;
             int destination, element;
 
-            for(int vertex = 0; vertex < size; vertex++) {
-                parent[vertex] = -1;
-                visited[vertex] = false;
+            //Initialize Parent[] and Visited[]
+            for(int i = 0; i < size; i++) {
+                parent[i] = -1;
+                visited[i] = false;
             }
 
             queue.add(source);
             parent[source] = -1;
             visited[source] = true;
 
+            //While there is a Queue
             while (!queue.isEmpty()) {
                 element = queue.remove();
                 destination = 1;
@@ -88,33 +104,47 @@ public class MaxFlow {
                     destination++;
                 }
             }
-            if(visited[goal]){
-                pathFound = true;
+            if(visited[sink]){
+                path = true;
             }
 
-            return pathFound;
+            return path;
         }
 
-        public int fordFulkerson(int graph[][], int source, int destination)
-        {
+    /**
+     * Ford Fulkersons Algorithm. This method uses a Graph(int [][]), a source vertex and
+     * a sink vertex. The algorithm finds matchings between left and right nodes/vertexes.
+     * Finds Max Flow.
+     * Returns number of matchings.
+     * @param graph -graph
+     * @param source -source/start vertex
+     * @param sink -Sink/End vertex
+     * @return int
+     */
+        public int fordFulkerson(int graph[][], int source, int sink) {
+
             int u, v;
             int maxFlow = 0;
             int pathFlow;
 
+            //Copy Graph to ResidualGraph.
             int[][] residualGraph = new int[size ][size ];
-            for (int sourceVertex = 0; sourceVertex < size; sourceVertex++){
-                for (int destinationVertex = 0; destinationVertex < size; destinationVertex++) {
-                    residualGraph[sourceVertex][destinationVertex] = graph[sourceVertex][destinationVertex];
+            for (int i = 0; i < size; i++){
+                for (int k = 0; k < size; k++) {
+                    residualGraph[i][k] = graph[i][k];
                 }
             }
+            //While there is a path
+            while (bfs(source ,sink, residualGraph)) {
+                pathFlow = 2;
 
-            while (bfs(source ,destination, residualGraph)) {
-                pathFlow = Integer.MAX_VALUE;
-                for (v = destination; v != source; v = parent[v]){
+
+                for (v = sink; v != source; v = parent[v]){
                     u = parent[v];
                     pathFlow = Math.min(pathFlow, residualGraph[u][v]);
                 }
-                for (v = destination; v != source; v = parent[v]){
+
+                for (v = sink; v != source; v = parent[v]){
                     u = parent[v];
                     residualGraph[u][v] -= pathFlow;
                     residualGraph[v][u] += pathFlow;
@@ -124,6 +154,11 @@ public class MaxFlow {
             System.out.println("\nMaxflow är: "+maxFlow);
             return maxFlow;
         }
+
+    /**
+     * Prints the Graph and takes a graph int [][] as input.
+     * @param graph - graph to be printed.
+     */
         public void printGraph(int [][] graph) {
 
             for (int i = 0; i < graph.length; i++) {
@@ -133,7 +168,12 @@ public class MaxFlow {
                 System.out.println();
             }
         }
-        public static void main(String...arg) {
+
+    /**
+     * Main method.
+     * @param args
+     */
+        public static void main(String...args) {
             new MaxFlow();
         }
     }
