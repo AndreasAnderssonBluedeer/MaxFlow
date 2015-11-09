@@ -4,14 +4,14 @@ import java.util.LinkedList;
 /**
  * Created by Andreas on 2015-10-28.
  * MaxFlow lets the user create a graph with connections between "U" and "V", and let
- * the Ford Fulkerson algorithm calculate the maximum flow. Returns/Prints Maximum Flow, used bows and
+ * the Ford Fulkerson algorithm calculate the maximum flow. Returns/Prints Maximum Flow and
  * input Graph.
  */
 public class MaxFlow {
 
         private int[] parent;
         private LinkedList<Integer> queue;
-        private int size,nodesLeft,nodesRight;
+        private int size;
         private boolean[] visited;
         private int[][] graph;
 
@@ -21,24 +21,24 @@ public class MaxFlow {
      */
         public MaxFlow() {
 
-
+            int nodesLeft,nodesRight;
             //Number of left and right nodes.
             nodesLeft = Integer.parseInt(JOptionPane.showInputDialog("Ange antal vänster noder."));
             nodesRight = Integer.parseInt(JOptionPane.showInputDialog("Ange antal höger noder."));
 
             size=nodesLeft + nodesRight + 2;
-            //Create Graph and arrays.
+
             graph = new int[size][size];
             this.queue = new LinkedList<Integer>();
             parent = new int[size ];
             visited = new boolean[size];
 
-            //Intialize Graph
+            //Intialize Array
             for (int i = 1; i <= nodesLeft; i++) {
                 graph[0][i] = 1;
             }
 
-            //Intialize Graph
+            //Intialize Array
             for (int i = nodesLeft + 1; i < graph.length - 1; i++) {
                 graph[i][graph.length - 1] = 1;
             }
@@ -63,10 +63,7 @@ public class MaxFlow {
                     graph[nodeLeft][nodeRight] = 1;
                 }
             }
-            System.out.println("InputGraf:");
-            //Print input-Graph.
             printGraph(graph);
-            //Find out Maxflow!
             fordFulkerson(graph,0,graph.length-1);
         }
 
@@ -74,7 +71,6 @@ public class MaxFlow {
      * This Method tries to find a path from Source to Sink vertex.
      * Recieves a Graph, Source vertex and Sink vertex. Returns Boolean
      * whether there is a path or not.
-     * Traverse graph.
      * @param source -source/Start Vertex.
      * @param sink  -Sink/End Vertex.
      * @param graph -Graph to find path in.
@@ -86,33 +82,33 @@ public class MaxFlow {
 
             //Initialize Parent[] and Visited[]
             for(int i = 0; i < size; i++) {
-                parent[i] = -1; //index outside the graph.
-                visited[i] = false; // the nodes arent visited yet.
+                parent[i] = -1;
+                visited[i] = false;
             }
 
-            queue.add(source);  //Add sourcenode/startnode to queue.
-            parent[source] = -1;    //index outside the graph.
-            visited[source] = true; //Set the source node to visited since we start there.
+            queue.add(source);
+            parent[source] = -1;
+            visited[source] = true;
 
             //While there is a Queue
             while (!queue.isEmpty()) {
-                element = queue.remove();   //Let "element" be the next "row-position to use in the graph. and remove from queue
-                destination = 1;    //Set destination to 1 since source is already visited.
+                element = queue.remove();
+                destination = 1;
 
-                while (destination < size) {    //While there still is nodes in the graph
-                    if (graph[element][destination] > 0 &&  !visited[destination]){ //If the node isnt visited and there is a bow.
-                        parent[destination] = element;  // set row position to column where there is a bow/path.
-                        queue.add(destination); // Add to queue.
-                        visited[destination] = true; //Set node to visited.
+                while (destination < size) {
+                    if (graph[element][destination] > 0 &&  !visited[destination]){
+                        parent[destination] = element;
+                        queue.add(destination);
+                        visited[destination] = true;
                     }
-                    destination++;  //Update for next position.
+                    destination++;
                 }
             }
-            if(visited[sink]){  //If we reach the sink node- There is a path!
+            if(visited[sink]){
                 path = true;
             }
 
-            return path;    //Return if there was a path or not.True/False
+            return path;
         }
 
     /**
@@ -138,53 +134,25 @@ public class MaxFlow {
                     residualGraph[i][k] = graph[i][k];
                 }
             }
-            //While there is a path bfs()-returns boolean
+            //While there is a path
             while (bfs(source ,sink, residualGraph)) {
-                pathFlow = 2;   //A value greater than 1 to compare with the bows/path in the graph.
+                pathFlow = 2;
 
 
-                for (v = sink; v != source; v = parent[v]){     //"walk the found path". (on iterate, v=u from last iteration.
-
-                    u = parent[v];  //Get the node on the other side of the bow. (U-bow-V)(Cordinates for the graph).
-
-
-                    //Set pathflow to the lowest value.0=no path,1=path (Should be 1 if everything is right).
+                for (v = sink; v != source; v = parent[v]){
+                    u = parent[v];
                     pathFlow = Math.min(pathFlow, residualGraph[u][v]);
-
                 }
 
-                for (v = sink; v != source; v = parent[v]){ //Update Residualgraphs bows/paths to mark used bows. Same loop as the one above.
-
-                    u = parent[v];  //Get the node on the other side of the bow. (U-bow-V)(Cordinates for the graph).
-                    residualGraph[u][v] -= pathFlow;    //Reset connection between nodes to 0( Mark path as used).
-                    residualGraph[v][u] += pathFlow;    //Show the new connection between the nodes by 1.Show Match/Bow.
-
+                for (v = sink; v != source; v = parent[v]){
+                    u = parent[v];
+                    residualGraph[u][v] -= pathFlow;
+                    residualGraph[v][u] += pathFlow;
                 }
-
-                maxFlow += pathFlow;    //Add pathflow's value to maxFlow (+1 more match).
-
+                maxFlow += pathFlow;
             }
-            System.out.println("\nNya grafen med använda bågar:");
-            printGraph(residualGraph);  //Print the "new" graph with matches.
-            System.out.println();
-            printBows(residualGraph);   //tell the user which bows are used, print.
-            System.out.println("\nMaxflow är: "+maxFlow);   //Print maxflow
-            return maxFlow; //Return Maxflow
-        }
-
-    /**
-     * Prints the used bows between the nodes.
-     * @param graph -graph to find bows in.
-     */
-        public void printBows(int[][] graph){
-            //Loops through the area in the array where the used bows are. If it finds one, print.
-            for(int i=nodesLeft+1; i<graph.length-1;i++){
-                for(int j=1; j<nodesLeft+1; j++){
-                    if(graph[i][j]==1){
-                        System.out.println("Båge använd mellan: "+j+"-"+i);
-                    }
-                }
-            }
+            System.out.println("\nMaxflow är: "+maxFlow);
+            return maxFlow;
         }
 
     /**
@@ -192,7 +160,7 @@ public class MaxFlow {
      * @param graph - graph to be printed.
      */
         public void printGraph(int [][] graph) {
-            //Loops through the graph and prints.
+
             for (int i = 0; i < graph.length; i++) {
                 for (int k = 0; k < graph[i].length; k++) {
                     System.out.print(graph[i][k] + " ");
